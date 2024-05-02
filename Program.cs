@@ -1,5 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System.Net;
+using System.Reflection;
+using WooliesScraper.Products;
+using WooliesScraper.WooliesScraper.Products.WooliesScraper.Products;
 
 namespace WooliesScraper
 {
@@ -25,7 +28,7 @@ namespace WooliesScraper
             response.EnsureSuccessStatusCode();
         }
 
-        public async Task<ProductDetail> GetProductDetails(int productId)
+        public async Task<WooliesProduct> RequestProductAsync(int productId)
         {
             try
             {
@@ -35,7 +38,7 @@ namespace WooliesScraper
                     return null;
 
                 string responseBody = await apiResponse.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<ProductDetail>(responseBody);
+                return JsonConvert.DeserializeObject<WooliesProduct>(responseBody);
             }
             catch (Exception ex)
             {
@@ -45,54 +48,223 @@ namespace WooliesScraper
         }
     }
 
-    internal class ProductDetail
-    {
-        public Product Product { get; set; }
-    }
-
-    internal class Product
-    {
-        public int Stockcode { get; set; }
-        public string Barcode { get; set; }
-        public string Name { get; set; }
-        public double Price { get; set; }
-    }
 
     internal class Program
     {
         static async Task Main(string[] args)
         {
+            Random random = new Random();
             var apiHandler = new WoolworthsApiHandler();
             await apiHandler.InitializeSession();  // Initialize session once
 
-            int startProductId = 300000;
-            int maxTasks = 1;  // Number of concurrent tasks
-
             while (true)
             {
-                var tasks = new List<Task>();
-                for (int i = 0; i < maxTasks; i++)
-                {
-                    int productId = startProductId + i;
-                    tasks.Add(ProcessProduct(apiHandler, productId));
-                }
+                int pID = random.Next(999999);
+                await ProcessProduct(apiHandler, pID);
+                //await Task.Delay(25);
+            }
 
-                await Task.WhenAll(tasks);
-                startProductId += maxTasks;
+
+            bool exit = false;
+            while (!exit)
+            {
+                Console.WriteLine("Enter product ID to search or 'exit' to quit:");
+                var product = Console.ReadLine();
+                if (product != null)
+                {
+                    if (product == "exit")
+                        break;
+
+                    int productID;
+                    bool isValid = int.TryParse(product, out productID);
+                    if (isValid)
+                    {
+                        await ProcessProduct(apiHandler, productID);
+                    }
+                }
             }
         }
 
-        static async Task ProcessProduct(WoolworthsApiHandler apiHandler, int productId)
+        public static async Task ProcessProduct(WoolworthsApiHandler apiHandler, int productId)
         {
-            var productDetail = await apiHandler.GetProductDetails(productId);
-            if (productDetail?.Product != null)
+            TableStorageService tableStorageService = new();
+            PrintStatusHeader($"Beginning lookup for product ID {productId}");
+            bool isSaved = await ProductSavedAsync(productId);
+            if (isSaved) 
             {
-                Console.WriteLine($"Product {productId}: {productDetail.Product.Name}, Price: {productDetail.Product.Price}");
+                PrintStatusHeader("Product already saved.");
+                //bool isValid = await ProductValidAsync(productId);
+                //if (!isValid)
+                //{
+                //    Console.WriteLine($"Product invalid for product ID {productId}");
+                //    return;
+                //}
+                //else
+                //{
+                //    var existingProductEntity = await tableStorageService.GetMostRecentEntityAsync<ProductTableEntity>("woolies-products", productId.ToString());
+                //    var existingProduct = existingProductEntity.GetProduct();
+                //    EnhancedPrintProduct(existingProduct);
+                //}
+                return;
+            }
+            PrintStatusHeader("No saved record of product. Attempting product query...");
+
+            WooliesProduct? product = await apiHandler.RequestProductAsync(productId);
+
+            if (product?.Product != null)
+            {
+                EnhancedPrintProduct(product);
+                var productEntity = new ProductTableEntity();
+                productEntity.SetProduct(product, DateTime.UtcNow);
+                await tableStorageService.AddEntityAsync("woolies-products", productEntity);
+
+                ProductValidTableEntity productExistsTableEntity = new ProductValidTableEntity
+                {
+                    PartitionKey = "product-valid",
+                    RowKey = productId.ToString(),
+                    IsValid = true
+                };
+                await tableStorageService.AddEntityAsync("woolies-product-check", productExistsTableEntity);
             }
             else
             {
+                ProductValidTableEntity productNotExistsTableEntity = new ProductValidTableEntity
+                {
+                    PartitionKey = "product-valid",
+                    RowKey = productId.ToString(),
+                    IsValid = false
+                };
+                await tableStorageService.AddEntityAsync("woolies-product-check", productNotExistsTableEntity);
                 Console.WriteLine($"No product found for ID {productId}");
             }
         }
+        public static async Task<bool> ProductSavedAsync(int productId)
+        {
+            TableStorageService tableStorageService = new();
+            return await tableStorageService.EntityExistsAsync<ProductTableEntity>("woolies-product-check", "product-valid", productId.ToString());
+        }
+        public static async Task<bool> ProductValidAsync(int productId)
+        {
+            TableStorageService tableStorageService = new();
+            var entity = await tableStorageService.GetEntityAsync<ProductValidTableEntity>("woolies-product-check", "product-valid", productId.ToString());
+            return entity.IsValid;
+        }
+
+
+        public static void PrintInfoHeader(string header)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.Write("[i] ");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(header);
+            Console.ResetColor();
+        }
+        public static void PrintStatusHeader(string header)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.Write("[i] ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine(header);
+            Console.ResetColor();
+        }
+
+        public static void PrintPropertyName(string name)
+        {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write("  " + name + ": ");
+            Console.ResetColor();
+        }
+
+        public static void PrintPropertyValue(string value)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(value);
+            Console.ResetColor();
+        }
+
+        public static void PrintNullValue()
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("null");
+            Console.ResetColor();
+        }
+        public static void EnhancedPrintProduct(WooliesProduct product)
+        {
+            if (product == null)
+            {
+                PrintInfoHeader("Product not found.");
+                return;
+            }
+
+            PrintInfoHeader("Product Information");
+            PrintProperties(product.Product, 1);
+
+            PrintInfoHeader("Additional Attributes");
+            PrintProperties(product.AdditionalAttributes, 1);
+
+            PrintInfoHeader("Country of Origin");
+            PrintProperties(product.CountryOfOriginLabel, 1);
+
+            PrintInfoHeader("Nutritional Information");
+            if (product.NutritionalInformation != null)
+            {
+                foreach (var info in product.NutritionalInformation)
+                {
+                    PrintProperties(info, 1);
+                }
+            }
+            else
+            {
+                PrintNullValue();
+            }
+
+            Console.ResetColor();
+        }
+
+        private static void PrintProperties(object obj, int indentLevel)
+        {
+            if (obj == null)
+            {
+                PrintNullValue();
+                return;
+            }
+
+            PropertyInfo[] properties = obj.GetType().GetProperties();
+            foreach (PropertyInfo property in properties)
+            {
+                object value = property.GetValue(obj);
+                PrintPropertyName(new string(' ', indentLevel * 2) + property.Name);
+
+                if (value == null)
+                {
+                    PrintNullValue();
+                }
+                else if (value.GetType().IsClass && !value.GetType().IsAssignableFrom(typeof(string)) && !(value is System.Collections.IEnumerable))
+                {
+                    Console.WriteLine();
+                    PrintProperties(value, indentLevel + 1);
+                }
+                else if (value is System.Collections.IEnumerable && !(value is string))
+                {
+                    Console.WriteLine();
+                    foreach (var item in (System.Collections.IEnumerable)value)
+                    {
+                        if (item == null)
+                        {
+                            PrintNullValue();
+                        }
+                        else
+                        {
+                            PrintPropertyValue(new string(' ', (indentLevel + 1) * 4) + item.ToString());
+                        }
+                    }
+                }
+                else
+                {
+                    PrintPropertyValue(value.ToString());
+                }
+            }
+        }
+
     }
 }
