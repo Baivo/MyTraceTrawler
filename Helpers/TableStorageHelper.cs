@@ -1,13 +1,7 @@
 ﻿using Azure.Data.Tables;
 using Azure;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WooliesScraper.WooliesScraper.Products.WooliesScraper.Products;
 
-namespace WooliesScraper
+namespace WooliesScraper.Helpers
 {
     public interface ITableStorageService
     {
@@ -17,17 +11,17 @@ namespace WooliesScraper
         Task UpdateEntityAsync<T>(string tableName, T entity) where T : class, ITableEntity, new();
         Task DeleteEntityAsync<T>(string tableName, T entity) where T : class, ITableEntity, new();
     }
-    public class TableStorageService : ITableStorageService
+    public class TableStorageHelper : ITableStorageService
     {
         private string ConnectionString = @"DefaultEndpointsProtocol=https;AccountName=runedb;AccountKey=qSQWOOCIkHta50YFE06FAFElbJr6EmgDmLQQe9t7ofMrJf9hROIkZRH3Jy05a9isw5QZLsWmQButACDbg5oLQQ==;TableEndpoint=https://runedb.table.cosmos.azure.com:443/;";
 
         private readonly TableServiceClient _tableServiceClient;
 
-        public TableStorageService()
+        public TableStorageHelper()
         {
             _tableServiceClient = new TableServiceClient(ConnectionString);
         }
-        public TableStorageService(string connectionString)
+        public TableStorageHelper(string connectionString)
         {
             ConnectionString = connectionString;
             _tableServiceClient = new TableServiceClient(ConnectionString);
@@ -37,7 +31,7 @@ namespace WooliesScraper
             return new TableClient(ConnectionString, tableName);
         }
 
-        
+
 
         public async Task AddEntityAsync<T>(string tableName, T entity) where T : class, ITableEntity, new()
         {
@@ -99,16 +93,16 @@ namespace WooliesScraper
             {
                 var tableClient = _tableServiceClient.GetTableClient(tableName);
                 var response = await tableClient.GetEntityAsync<T>(partitionKey, rowKey);
-                return response.Value;  
+                return response.Value;
             }
             catch (RequestFailedException ex)
             {
-                if (ex.Status == 404) 
+                if (ex.Status == 404)
                 {
-                    return null; 
+                    return null;
                 }
                 Console.WriteLine($"Error retrieving entity: {ex.Message}");
-                throw; 
+                throw;
             }
         }
 
@@ -162,7 +156,7 @@ namespace WooliesScraper
         }
         public async Task BulkUploadToTableAsync<T>(List<T> entities, string tableName) where T : ITableEntity
         {
-            TableStorageService tableStorageService = new TableStorageService();
+            TableStorageHelper tableStorageService = new TableStorageHelper();
             TableClient tableClient = tableStorageService.GetTableClient(tableName);
             await tableClient.CreateIfNotExistsAsync();
 
@@ -181,7 +175,7 @@ namespace WooliesScraper
             for (int i = 0; i < totalEntities; i += batchSize)
             {
                 List<TableTransactionAction> batch = new List<TableTransactionAction>();
-                for (int j = 0; j < batchSize && (i + j) < totalEntities; j++)
+                for (int j = 0; j < batchSize && i + j < totalEntities; j++)
                 {
                     var entity = entities[i + j];
                     entity.PartitionKey = partitionKey;
@@ -208,7 +202,7 @@ namespace WooliesScraper
 
                         break;
                     }
-                    catch (Azure.RequestFailedException ex) when (ex.Status == 429 && retryCount < maxRetries)
+                    catch (RequestFailedException ex) when (ex.Status == 429 && retryCount < maxRetries)
                     {
                         Console.Write($"\rRate limit exceeded, retrying... Attempt {retryCount + 1}. ");
                         await Task.Delay((int)(Math.Pow(backoffFactor, retryCount) * 1000));
