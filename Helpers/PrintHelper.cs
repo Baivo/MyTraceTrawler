@@ -19,6 +19,7 @@ namespace WooliesScraper.Helpers
 
             Console.ResetColor();
         }
+        
         public static void PrintSuccess(string reason = "")
         {
             Console.ForegroundColor = ConsoleColor.Gray;

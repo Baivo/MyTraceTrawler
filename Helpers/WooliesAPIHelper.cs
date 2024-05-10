@@ -142,6 +142,23 @@ namespace WooliesScraper.Helpers
                 return;
             }
         }
-
+        public async Task IndexExistingProductFromIDAsync(int productId)
+        {
+            TableStorageHelper tableStorageService = new TableStorageHelper();
+            bool isSaved = await ProductSavedAsync(productId);
+            if (isSaved) 
+            {
+                bool isValid = await ProductValidAsync(productId);
+                if (isValid)
+                {
+                    ProductTableEntity productEntity = await tableStorageService.GetMostRecentEntityAsync<ProductTableEntity>("woolies-products", productId.ToString());
+                    WooliesProduct product = productEntity.GetProduct();
+                    if (product != null && product.Product != null && product.Product.Barcode != null)
+                    {
+                        IndexProduct(product);
+                    }
+                }
+            }
+        }
     }
 }
