@@ -19,7 +19,7 @@ namespace WooliesScraper.Helpers
 
             Console.ResetColor();
         }
-        public static void PrintSuccess()
+        public static void PrintSuccess(string reason = "")
         {
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write("[");
@@ -28,9 +28,16 @@ namespace WooliesScraper.Helpers
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write("] ");
 
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Success!");
-
+            if (reason.Length > 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(reason);
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Success!");
+            }
             Console.ResetColor();
         }
         public static void PrintFailure(string reason = "")
@@ -42,19 +49,15 @@ namespace WooliesScraper.Helpers
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write("] ");
 
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Failed!");
-
             if (reason.Length > 0)
             {
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.Write("[");
-                Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.Write('X');
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.Write("] ");
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(reason);
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Failed!");
             }
             Console.ResetColor();
         }

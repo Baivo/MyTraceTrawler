@@ -10,10 +10,10 @@ namespace WooliesScraper.Helpers
     internal class WooliesAPIHelper
     {
         private readonly HttpClient client;
-        private bool PrintMode { get; set; } = false;
+        private bool DebugMode { get; set; } = false;
         public WooliesAPIHelper(bool printMode = false)
         {
-            PrintMode = printMode;
+            DebugMode = printMode;
             var handler = new HttpClientHandler
             {
                 CookieContainer = new CookieContainer(),
@@ -50,11 +50,12 @@ namespace WooliesScraper.Helpers
         public async Task ProcessProduct(int productId)
         {
             TableStorageHelper tableStorageService = new();
-            PrintInfoHeader($"Beginning lookup for product ID {productId}...");
+            PrintInfoHeader($"Processing product ID: {productId}");
             bool isSaved = await ProductSavedAsync(productId);
             if (isSaved)
             {
-                PrintInfoHeader("Product already saved, checking existing record...");
+                if (DebugMode)
+                    PrintInfoHeader("Product already saved, checking existing record...");
                 bool isValid = await ProductValidAsync(productId);
                 if (!isValid)
                 {
@@ -66,18 +67,22 @@ namespace WooliesScraper.Helpers
                     var existingProductEntity = await tableStorageService.GetMostRecentEntityAsync<ProductTableEntity>("woolies-products", productId.ToString());
                     WooliesProduct existingProduct = existingProductEntity.GetProduct();
                     IndexProduct(existingProduct);
-                    if (PrintMode)
+                    string barcode = existingProduct.Product?.Barcode ?? string.Empty;
+                    PrintSuccess($"Processed {productId} with barcode {barcode}");
+                    if (DebugMode)
                         EnhancedPrintProduct(existingProduct);
                 }
+                
                 return;
             }
-            PrintInfoHeader("No saved record of product. Attempting product query...");
+            if (DebugMode)
+                PrintInfoHeader("No saved record of product. Attempting product query...");
 
             WooliesProduct? product = await RequestProductAsync(productId);
 
             if (product?.Product != null)
             {
-                if (PrintMode)
+                if (DebugMode)
                     EnhancedPrintProduct(product);
                 IndexProduct(product);
                 var productEntity = new ProductTableEntity();
@@ -103,6 +108,7 @@ namespace WooliesScraper.Helpers
                 await tableStorageService.AddEntityAsync("woolies-product-check", productNotExistsTableEntity);
                 PrintFailure($"No product found for ID: {productId}");
             }
+            PrintSuccess();
         }
         private async Task<bool> ProductSavedAsync(int productId)
         {
@@ -121,12 +127,14 @@ namespace WooliesScraper.Helpers
             {
                 TableStorageHelper tableStorageService = new TableStorageHelper();
                 StockBarIndexTableEntity tableEntity = new StockBarIndexTableEntity(product);
-                PrintInfoHeader($"Indexing Barcode ({tableEntity.BarCode}) against Stock code ({tableEntity.StockCode})...");
+                if (DebugMode)
+                    PrintInfoHeader($"Indexing Barcode ({tableEntity.BarCode}) against Stock code ({tableEntity.StockCode})...");
 
                 TableClient tableClient = tableStorageService.GetTableClient("stockcode-barcode-index");
                 await tableClient.CreateIfNotExistsAsync();
                 await tableClient.UpsertEntityAsync(tableEntity);
-                PrintSuccess();
+                if (DebugMode)
+                    PrintSuccess();
             }
             catch
             {
