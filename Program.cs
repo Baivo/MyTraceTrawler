@@ -55,13 +55,12 @@ namespace WooliesScraper
         {
             Random random = new Random();
             var apiHandler = new WoolworthsApiHandler();
-            await apiHandler.InitializeSession();  // Initialize session once
+            await apiHandler.InitializeSession(); 
 
             while (true)
             {
                 int pID = random.Next(999999);
                 await ProcessProduct(apiHandler, pID);
-                //await Task.Delay(25);
             }
 
 
@@ -101,7 +100,7 @@ namespace WooliesScraper
                 //}
                 //else
                 //{
-                //    var existingProductEntity = await tableStorageService.GetMostRecentEntityAsync<ProductTableEntity>("woolies-products", productId.ToString());
+                //    var existingProductEntity = await tableStorageServicfe.GetMostRecentEntityAsync<ProductTableEntity>("woolies-products", productId.ToString());
                 //    var existingProduct = existingProductEntity.GetProduct();
                 //    EnhancedPrintProduct(existingProduct);
                 //}
