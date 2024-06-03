@@ -17,7 +17,7 @@ namespace WooliesScraper.Products
         public object Productdepthmm { get; set; }
         public object Skincondition { get; set; }
         public object Ophthalmologistapproved { get; set; }
-        public object Healthstarrating { get; set; }
+        public string Healthstarrating { get; set; } = string.Empty;
         public object Hairtype { get; set; }
 
         [JsonProperty("fragrance-free")]
@@ -235,8 +235,8 @@ namespace WooliesScraper.Products
         public bool? IsForCollection { get; set; }
         public bool? IsForDelivery { get; set; }
         public bool? IsForExpress { get; set; }
-        public object ProductRestrictionMessage { get; set; }
-        public object ProductWarningMessage { get; set; }
+        public string ProductRestrictionMessage { get; set; } = string.Empty;
+        public string ProductWarningMessage { get; set; } = string.Empty;
         public CentreTag CentreTag { get; set; }
         public bool? IsCentreTag { get; set; }
         public ImageTag ImageTag { get; set; }
