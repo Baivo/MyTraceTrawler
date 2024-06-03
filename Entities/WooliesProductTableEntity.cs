@@ -6,7 +6,7 @@ using WooliesScraper.Products;
 namespace WooliesScraper.Entities
 {
 
-    public class ProductTableEntity : ITableEntity
+    public class WooliesProductTableEntity : ITableEntity
     {
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }

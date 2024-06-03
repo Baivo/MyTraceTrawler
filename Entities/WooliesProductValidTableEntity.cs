@@ -3,7 +3,7 @@ using Azure;
 
 namespace WooliesScraper.Entities
 {
-    public class ProductValidTableEntity : ITableEntity
+    public class WooliesProductValidTableEntity : ITableEntity
     {
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }

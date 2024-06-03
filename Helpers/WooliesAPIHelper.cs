@@ -64,7 +64,7 @@ namespace WooliesScraper.Helpers
                 }
                 else
                 {
-                    var existingProductEntity = await tableStorageService.GetMostRecentEntityAsync<ProductTableEntity>("woolies-products", productId.ToString());
+                    var existingProductEntity = await tableStorageService.GetMostRecentEntityAsync<WooliesProductTableEntity>("woolies-products", productId.ToString());
                     WooliesProduct existingProduct = existingProductEntity.GetProduct();
                     IndexProduct(existingProduct);
                     string barcode = existingProduct.Product?.Barcode ?? string.Empty;
@@ -85,11 +85,11 @@ namespace WooliesScraper.Helpers
                 if (DebugMode)
                     EnhancedPrintProduct(product);
                 IndexProduct(product);
-                var productEntity = new ProductTableEntity();
+                var productEntity = new WooliesProductTableEntity();
                 productEntity.SetProduct(product, DateTime.UtcNow);
                 await tableStorageService.AddEntityAsync("woolies-products", productEntity);
 
-                ProductValidTableEntity productExistsTableEntity = new ProductValidTableEntity
+                WooliesProductValidTableEntity productExistsTableEntity = new WooliesProductValidTableEntity
                 {
                     PartitionKey = "product-valid",
                     RowKey = productId.ToString(),
@@ -99,7 +99,7 @@ namespace WooliesScraper.Helpers
             }
             else
             {
-                ProductValidTableEntity productNotExistsTableEntity = new ProductValidTableEntity
+                WooliesProductValidTableEntity productNotExistsTableEntity = new WooliesProductValidTableEntity
                 {
                     PartitionKey = "product-valid",
                     RowKey = productId.ToString(),
@@ -113,12 +113,12 @@ namespace WooliesScraper.Helpers
         private async Task<bool> ProductSavedAsync(int productId)
         {
             TableStorageHelper tableStorageService = new();
-            return await tableStorageService.EntityExistsAsync<ProductTableEntity>("woolies-product-check", "product-valid", productId.ToString());
+            return await tableStorageService.EntityExistsAsync<WooliesProductTableEntity>("woolies-product-check", "product-valid", productId.ToString());
         }
         private static async Task<bool> ProductValidAsync(int productId)
         {
             TableStorageHelper tableStorageService = new();
-            var entity = await tableStorageService.GetEntityAsync<ProductValidTableEntity>("woolies-product-check", "product-valid", productId.ToString());
+            var entity = await tableStorageService.GetEntityAsync<WooliesProductValidTableEntity>("woolies-product-check", "product-valid", productId.ToString());
             return entity.IsValid;
         }
         private async void IndexProduct(WooliesProduct product)
@@ -126,7 +126,7 @@ namespace WooliesScraper.Helpers
             try
             {
                 TableStorageHelper tableStorageService = new TableStorageHelper();
-                StockBarIndexTableEntity tableEntity = new StockBarIndexTableEntity(product);
+                WooliesStockCodeBarcodeTableEntity tableEntity = new WooliesStockCodeBarcodeTableEntity(product);
                 if (DebugMode)
                     PrintInfoHeader($"Indexing Barcode ({tableEntity.BarCode}) against Stock code ({tableEntity.StockCode})...");
 
@@ -151,7 +151,7 @@ namespace WooliesScraper.Helpers
                 bool isValid = await ProductValidAsync(productId);
                 if (isValid)
                 {
-                    ProductTableEntity productEntity = await tableStorageService.GetMostRecentEntityAsync<ProductTableEntity>("woolies-products", productId.ToString());
+                    WooliesProductTableEntity productEntity = await tableStorageService.GetMostRecentEntityAsync<WooliesProductTableEntity>("woolies-products", productId.ToString());
                     WooliesProduct product = productEntity.GetProduct();
                     if (product != null && product.Product != null && product.Product.Barcode != null)
                     {

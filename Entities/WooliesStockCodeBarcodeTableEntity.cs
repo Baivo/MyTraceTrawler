@@ -4,7 +4,7 @@ using WooliesScraper.Products;
 
 namespace WooliesScraper.Entities
 {
-    public class StockBarIndexTableEntity : ITableEntity
+    public class WooliesStockCodeBarcodeTableEntity : ITableEntity
     {
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }
@@ -14,7 +14,7 @@ namespace WooliesScraper.Entities
         public string BarCode { get; set; }
         public string Merchant { get; set; }
 
-        public StockBarIndexTableEntity(WooliesProduct product)
+        public WooliesStockCodeBarcodeTableEntity(WooliesProduct product)
         {
             PartitionKey = product.Product?.Barcode?.ToString() ?? "UnknownBarCode";
             RowKey = product.Product?.Stockcode.ToString() ?? "UnknownStockCode";
