@@ -1,5 +1,4 @@
-﻿using Microsoft.IdentityModel.Protocols;
-using System;
+﻿using System;
 using WooliesScraper.Helpers;
 
 namespace WooliesScraper
@@ -18,9 +17,10 @@ namespace WooliesScraper
                     "Connection Timeout=30;";
         static async Task Main(string[] args)
         {
-            
-            
-            //AzureSqlHelper.Test();
+
+
+            AzureSqlHelper azureSqlHelper = new();
+            azureSqlHelper.QueryDataExample();
 
             /*
             var apiHelper= new WooliesAPIHelper();
