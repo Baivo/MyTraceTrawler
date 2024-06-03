@@ -4,6 +4,14 @@ using WooliesScraper.Helpers;
 
 namespace WooliesScraper
 {
+    public enum Vendor
+    {
+        Woolies,
+        Coles,
+        Aldi,
+        IGA,
+        Drakes
+    }
     public class Program
     {
         public static bool printMode = false;
@@ -58,5 +66,7 @@ namespace WooliesScraper
 
             }
         }
+
+        
     }
 }
