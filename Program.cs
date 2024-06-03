@@ -1,13 +1,28 @@
-﻿using System;
+﻿using Microsoft.IdentityModel.Protocols;
+using System;
 using WooliesScraper.Helpers;
 
 namespace WooliesScraper
 {
-    internal class Program
+    public class Program
     {
         public static bool printMode = false;
+        public static string _connectionString = "Server=tcp:mytrace.database.windows.net,1433;" +
+                    "Initial Catalog=MyTrace;" +
+                    "Persist Security Info=False;" +
+                    "User ID=mytrace;" +
+                    "Password=John8:32;" +
+                    "MultipleActiveResultSets=False;" +
+                    "Encrypt=True;" +
+                    "TrustServerCertificate=False;" +
+                    "Connection Timeout=30;";
         static async Task Main(string[] args)
         {
+            
+            
+            //AzureSqlHelper.Test();
+
+            /*
             var apiHelper= new WooliesAPIHelper();
             await apiHelper.InitializeSession();
 
@@ -18,6 +33,7 @@ namespace WooliesScraper
                 int pID = random.Next(999999);
                 await apiHelper.ProcessProduct(pID);
             }
+            */
         }
         static async Task IndexAllSavedProductsAsync(WooliesAPIHelper apiHelper)
         {
