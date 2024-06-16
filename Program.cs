@@ -1,16 +1,9 @@
-﻿using System;
-using WooliesScraper.Helpers;
+﻿using MyTraceTrawler.Tables;
+using MyTraceTrawler.Services;
+using MyTraceTrawler.Trawlers;
 
-namespace WooliesScraper
+namespace MyTraceTrawler
 {
-    public enum Vendor
-    {
-        Woolies,
-        Coles,
-        Aldi,
-        IGA,
-        Drakes
-    }
     public class Program
     {
         public static bool printMode = false;
@@ -20,53 +13,39 @@ namespace WooliesScraper
                     "User ID=mytrace;" +
                     "Password=John8:32;" +
                     "MultipleActiveResultSets=False;" +
-                    "Encrypt=True;" +
+                    "Encrypt=True;" +   
                     "TrustServerCertificate=False;" +
                     "Connection Timeout=30;";
+        private static string colesApiKey = "ca2Fg3art28TTfVRgCsm4iMaZF16WgaNkNOKO4yDc6uGc";
         static async Task Main(string[] args)
         {
 
-
-            AzureSqlHelper azureSqlHelper = new();
-            azureSqlHelper.QueryDataExample();
-
-            /*
-            var apiHelper= new WooliesAPIHelper();
-            await apiHelper.InitializeSession();
-
-            Random random = new Random();
-
-            while (true)
-            {
-                int pID = random.Next(999999);
-                await apiHelper.ProcessProduct(pID);
-            }
-            */
+            
         }
-        static async Task IndexAllSavedProductsAsync(WooliesAPIHelper apiHelper)
+
+        static async Task ColesTrawlMode()
         {
-            int totalProducts = 1000000;
-            int batchSize = 1000;
+            await ColesTrawler.TrawlProductsAsync();
+            await ColesTrawler.TrawlBrandsAsync();
+        }
+        static async Task WoolworthsStockCodeIndexTrawlMode(int lowerBound = 0, int upperBound = 9999999)
+        {
+            PrintService.PrintInfo($"Starting MyTraceTrawler in Woolworths StockCode indexing mode for stock codes between {lowerBound} - {upperBound}");
+            await WoolworthsTrawler.TrawlStockCodesBarcodesToIndexAsync(lowerBound, upperBound);
+        }
+        static async Task TestWoolworthsMatchingProductsAsync()
+        {
+            string sapDepartment = "GROCERIES";
+            string sapCategory = "ETHNIC / GOURMET FOOD";
+            string sapSubCategory = "AUTHENTIC INDIAN";
+            string sapSegment = "SEASONINGS / SPICES";
 
-            for (int startIndex = 0; startIndex < totalProducts; startIndex += batchSize)
+
+            List<WoolworthsProduct> products = await WoolworthsSqlService.GetMatchingProductsAsync(sapDepartment, sapCategory, sapSubCategory, sapSegment);
+            foreach (var product in products)
             {
-                var tasks = new List<Task>();
-
-                for (int i = startIndex; i < startIndex + batchSize && i < totalProducts; i++)
-                {
-                    int index = i;
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        await apiHelper.IndexExistingProductFromIDAsync(index);
-                    }));
-                }
-                Console.Write
-                        ($"\rIndexing {startIndex}/{totalProducts}");
-                await Task.WhenAll(tasks);
-
+                PrintService.PrintInfo($"{product.Name} - {product.Barcode}");
             }
         }
-
-        
     }
 }

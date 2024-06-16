@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace WooliesScraper.Migrations
+namespace MyTraceTrawler.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class NewIndex : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -14,12 +14,11 @@ namespace WooliesScraper.Migrations
                 name: "Barcode",
                 columns: table => new
                 {
-                    BarcodeId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1")
+                    BarcodesId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Barcode", x => x.BarcodeId);
+                    table.PrimaryKey("PK_Barcode", x => x.BarcodesId);
                 });
 
             migrationBuilder.CreateTable(
@@ -28,34 +27,23 @@ namespace WooliesScraper.Migrations
                 {
                     VendorStockCodeId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Barcode = table.Column<int>(type: "int", nullable: false),
-                    VendorName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    BarcodeId = table.Column<int>(type: "int", nullable: true)
+                    Barcode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VendorName = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_StockCodes", x => x.VendorStockCodeId);
-                    table.ForeignKey(
-                        name: "FK_StockCodes_Barcode_BarcodeId",
-                        column: x => x.BarcodeId,
-                        principalTable: "Barcode",
-                        principalColumn: "BarcodeId");
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_StockCodes_BarcodeId",
-                table: "StockCodes",
-                column: "BarcodeId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "StockCodes");
+                name: "Barcode");
 
             migrationBuilder.DropTable(
-                name: "Barcode");
+                name: "StockCodes");
         }
     }
 }
