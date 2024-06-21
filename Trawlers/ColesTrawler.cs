@@ -1,5 +1,5 @@
-﻿using MyTraceTrawler.Services;
-using MyTraceTrawler.Tables;
+﻿using MyTraceLib.Services;
+using MyTraceLib.Tables;
 
 namespace MyTraceTrawler.Trawlers
 {

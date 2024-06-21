@@ -1,5 +1,5 @@
-﻿using MyTraceTrawler.Tables;
-using MyTraceTrawler.Services;
+﻿using MyTraceLib.Tables;
+using MyTraceLib.Services;
 using MyTraceTrawler.Trawlers;
 
 namespace MyTraceTrawler
@@ -19,8 +19,7 @@ namespace MyTraceTrawler
         private static string colesApiKey = "ca2Fg3art28TTfVRgCsm4iMaZF16WgaNkNOKO4yDc6uGc";
         static async Task Main(string[] args)
         {
-
-            
+            await TestWoolworthsMatchingProductsAsync("9352357004479");
         }
 
         static async Task ColesTrawlMode()
@@ -33,19 +32,31 @@ namespace MyTraceTrawler
             PrintService.PrintInfo($"Starting MyTraceTrawler in Woolworths StockCode indexing mode for stock codes between {lowerBound} - {upperBound}");
             await WoolworthsTrawler.TrawlStockCodesBarcodesToIndexAsync(lowerBound, upperBound);
         }
-        static async Task TestWoolworthsMatchingProductsAsync()
+        static async Task TestWoolworthsMatchingProductsAsync(string barcode)
         {
-            string sapDepartment = "GROCERIES";
-            string sapCategory = "ETHNIC / GOURMET FOOD";
-            string sapSubCategory = "AUTHENTIC INDIAN";
-            string sapSegment = "SEASONINGS / SPICES";
+            PrintService.PrintInfo($"Starting search for {barcode}");
+            var product = await WoolworthsSqlService.GetProductByBarcodeAsync(barcode);
 
-
-            List<WoolworthsProduct> products = await WoolworthsSqlService.GetMatchingProductsAsync(sapDepartment, sapCategory, sapSubCategory, sapSegment);
-            foreach (var product in products)
+            if (product == null)
             {
-                PrintService.PrintInfo($"{product.Name} - {product.Barcode}");
+                PrintService.PrintFailure("No product found.");
             }
+            else
+            {
+                PrintService.PrintSuccess($"Found product! {product.Name}");
+                
+                PrintService.PrintInfo($"Department: {product.SapDepartment}");
+                PrintService.PrintInfo($"Category: {product.SapCategory}");
+                PrintService.PrintInfo($"SubCategory: {product.SapSubCategory}");
+                PrintService.PrintInfo($"Segment: {product.SapSegment}");
+                PrintService.PrintInfo("Searching similar products.");
+                List<WoolworthsProduct> products = await WoolworthsSqlService.GetMatchingProductsAsync(product);
+                foreach (var p in products)
+                {
+                    PrintService.PrintInfo($"{p.Name} - {p.Barcode}");
+                }
+            }
+           
         }
     }
 }
