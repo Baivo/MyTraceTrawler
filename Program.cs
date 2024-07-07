@@ -1,4 +1,5 @@
-﻿using MyTraceLib.Tables;
+﻿using System.CommandLine;
+using MyTraceLib.Tables;
 using MyTraceLib.Services;
 using MyTraceTrawler.Trawlers;
 
@@ -15,48 +16,72 @@ namespace MyTraceTrawler
                     "MultipleActiveResultSets=False;" +
                     "Encrypt=True;" +   
                     "TrustServerCertificate=False;" +
-                    "Connection Timeout=30;";
+                    "Connection Timeout=300;";
         private static string colesApiKey = "ca2Fg3art28TTfVRgCsm4iMaZF16WgaNkNOKO4yDc6uGc";
-        static async Task Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
-            await TestWoolworthsMatchingProductsAsync("9352357004479");
+            var rootCommand = new RootCommand
+            {
+                Description = "Vendor specific operations"
+            };
+
+            var vendorOption = new Option<string>(
+                new string[] { "-vendor", "--vendor" },
+                description: "Specify the vendor (Coles, Woolworths, Costco)",
+                getDefaultValue: () => string.Empty);
+
+            rootCommand.AddOption(vendorOption);
+
+            rootCommand.SetHandler(async (string vendor) => 
+            {
+                if (string.IsNullOrEmpty(vendor))
+                    RunDefaultLogic();
+                else
+                {
+                    switch (vendor.ToLower())
+                    {
+                        case "coles":
+                            await RunColesLogicAsync();
+                            break;
+                        case "costco":
+                            await RunCostcoLogicAsync();
+                            break;
+                        case "woolworths":
+                            await RunWoolworthsLogicAsync();
+                            break;
+                        default:
+                            Console.WriteLine($"Unknown vendor: {vendor}");
+                            break;
+                    }
+                }
+            }, vendorOption);
+
+            return await rootCommand.InvokeAsync(args);
+        }
+        static void RunDefaultLogic()
+        {
+            PrintService.PrintInfo("Please provide a vendor to trawl e.g. -vendor Coles");
+
         }
 
-        static async Task ColesTrawlMode()
+        static async Task RunColesLogicAsync()
         {
             await ColesTrawler.TrawlProductsAsync();
             await ColesTrawler.TrawlBrandsAsync();
         }
-        static async Task WoolworthsStockCodeIndexTrawlMode(int lowerBound = 0, int upperBound = 9999999)
+        static async Task RunCostcoLogicAsync()
         {
-            PrintService.PrintInfo($"Starting MyTraceTrawler in Woolworths StockCode indexing mode for stock codes between {lowerBound} - {upperBound}");
-            await WoolworthsTrawler.TrawlStockCodesBarcodesToIndexAsync(lowerBound, upperBound);
+            await CostcoTrawler.TrawlProductsAsync();
         }
-        static async Task TestWoolworthsMatchingProductsAsync(string barcode)
-        {
-            PrintService.PrintInfo($"Starting search for {barcode}");
-            var product = await WoolworthsSqlService.GetProductByBarcodeAsync(barcode);
 
-            if (product == null)
+        static async Task RunWoolworthsLogicAsync()
+        {
+            int batchCounter = 0;
+            while (true)
             {
-                PrintService.PrintFailure("No product found.");
+                await WoolworthsTrawler.TrawlWoolworthsProductsAsync(0, 9999999, batchCounter);
+                batchCounter = batchCounter + 10;
             }
-            else
-            {
-                PrintService.PrintSuccess($"Found product! {product.Name}");
-                
-                PrintService.PrintInfo($"Department: {product.SapDepartment}");
-                PrintService.PrintInfo($"Category: {product.SapCategory}");
-                PrintService.PrintInfo($"SubCategory: {product.SapSubCategory}");
-                PrintService.PrintInfo($"Segment: {product.SapSegment}");
-                PrintService.PrintInfo("Searching similar products.");
-                List<WoolworthsProduct> products = await WoolworthsSqlService.GetMatchingProductsAsync(product);
-                foreach (var p in products)
-                {
-                    PrintService.PrintInfo($"{p.Name} - {p.Barcode}");
-                }
-            }
-           
         }
     }
 }
