@@ -10,7 +10,7 @@ namespace MyTraceTrawler.Trawlers
             PrintService.PrintInfo("Trawling Costco Products");
             List<CostcoProduct> CostcoProducts = await CostcoApiService.GetAllCostcoProductsAsync(initialOffset);
             PrintService.PrintInfo($"Collected {CostcoProducts.Count} products. Saving to database...");
-            //await CostcoSqlService.SaveProductsAsync(CostcoProducts);
+            await CostcoSqlService.SaveProductsAsync(CostcoProducts);
             PrintService.PrintSuccess($"Done!");
         }
 
@@ -19,7 +19,7 @@ namespace MyTraceTrawler.Trawlers
             PrintService.PrintInfo("Trawling Costco Brands");
             List<CostcoBrand> CostcoBrands = await CostcoApiService.GetAllCostcoBrandsAsync();
             PrintService.PrintInfo($"Collected {CostcoBrands.Count} brands. Saving to database...");
-            //await CostcoSqlService.SaveBrandsAsync(CostcoBrands);
+            await CostcoSqlService.SaveBrandsAsync(CostcoBrands);
         }
     }
 }

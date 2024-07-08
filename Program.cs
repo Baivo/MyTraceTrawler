@@ -72,6 +72,7 @@ namespace MyTraceTrawler
         static async Task RunCostcoLogicAsync()
         {
             await CostcoTrawler.TrawlProductsAsync();
+            await CostcoTrawler.TrawlBrandsAsync();
         }
 
         static async Task RunWoolworthsLogicAsync()
