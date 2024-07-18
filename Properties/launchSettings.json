@@ -2,7 +2,7 @@
   "profiles": {
     "MyTraceTrawler": {
       "commandName": "Project",
-      "commandLineArgs": "-vendor costco"
+      "commandLineArgs": "-vendor coles"
     }
   }
 }
