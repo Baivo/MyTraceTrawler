@@ -2,7 +2,12 @@
   "profiles": {
     "MyTraceTrawler": {
       "commandName": "Project",
-      "commandLineArgs": "-vendor coles"
+      "commandLineArgs": "-vendor coles",
+      "environmentVariables": {
+        "SQL_CONNECTION_STRING": "Server=tcp:mytrace.database.windows.net,1433;Initial Catalog=MyTrace;Persist Security Info=False;User ID=mytrace;Password=John8:32;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=300;",
+        "AI_API_KEY": "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",
+        "FUNCTIONS_CODE": "jX7ieFKp6eNhVUHzQEUqq4rt7XRczZ-J3etU7jmbEGHVAzFuHhhsYQ=="
+      }
     }
   }
 }

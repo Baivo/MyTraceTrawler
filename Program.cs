@@ -8,15 +8,7 @@ namespace MyTraceTrawler
     public class Program
     {
         public static bool printMode = false;
-        public static string _connectionString = "Server=tcp:mytrace.database.windows.net,1433;" +
-                    "Initial Catalog=MyTrace;" +
-                    "Persist Security Info=False;" +
-                    "User ID=mytrace;" +
-                    "Password=John8:32;" +
-                    "MultipleActiveResultSets=False;" +
-                    "Encrypt=True;" +   
-                    "TrustServerCertificate=False;" +
-                    "Connection Timeout=300;";
+        public static string? _connectionString = Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING");
         private static string colesApiKey = "ca2Fg3art28TTfVRgCsm4iMaZF16WgaNkNOKO4yDc6uGc";
         static async Task<int> Main(string[] args)
         {
